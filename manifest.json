@@ -1,7 +1,7 @@
 {
   "name": "Pushup Tracker",
   "short_name": "Pushups",
-  "start_url": "/",
+  "start_url": "/pushup-tracker",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0f172a",
