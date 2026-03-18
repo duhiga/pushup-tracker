@@ -44,11 +44,10 @@ createApp({
     });
 
     function pressHaptic() {
-      navigator.vibrate(10);
+      if (navigator.vibrate) navigator.vibrate(10);
     }
-
     function successHaptic() {
-      navigator.vibrate(30); // stronger + longer
+      if (navigator.vibrate) navigator.vibrate(30); // stronger + longer
     }
 
     function add(n) { dayData.value.count += n; checkGoalContribution(); saveState(); }
@@ -257,62 +256,62 @@ createApp({
 
     <div class="buttons">
       <button class="danger"
-        @touchstart="pressHaptic"
-        @click="sub(state.settings.step)"
-        :disabled="dayData.restUsed"
-        :style="{ opacity: dayData.restUsed ? 0.4 : 1 }">-{{ state.settings.step }}</button>
+              @pointerdown="pressHaptic"
+              @click="sub(state.settings.step)"
+              :disabled="dayData.restUsed"
+              :style="{ opacity: dayData.restUsed ? 0.4 : 1 }">
+        -{{ state.settings.step }}
+      </button>
 
       <button class="primary"
-        @touchstart="pressHaptic"
-        @click="add(state.settings.step)"
-        :disabled="dayData.restUsed"
-        :style="{ opacity: dayData.restUsed ? 0.4 : 1 }">+{{ state.settings.step }}</button>
+              @pointerdown="pressHaptic"
+              @click="add(state.settings.step)"
+              :disabled="dayData.restUsed"
+              :style="{ opacity: dayData.restUsed ? 0.4 : 1 }">
+        +{{ state.settings.step }}
+      </button>
 
       <button class="danger"
-        @touchstart="pressHaptic"
-        @click="sub(1)"
-        :disabled="dayData.restUsed"
-        :style="{ opacity: dayData.restUsed ? 0.4 : 1 }">-1</button>
+              @pointerdown="pressHaptic"
+              @click="sub(1)"
+              :disabled="dayData.restUsed"
+              :style="{ opacity: dayData.restUsed ? 0.4 : 1 }">
+        -1
+      </button>
 
       <button class="primary"
-        @touchstart="pressHaptic"
-        @click="add(1)"
-        :disabled="dayData.restUsed"
-        :style="{ opacity: dayData.restUsed ? 0.4 : 1 }">+1</button>
+              @pointerdown="pressHaptic"
+              @click="add(1)"
+              :disabled="dayData.restUsed"
+              :style="{ opacity: dayData.restUsed ? 0.4 : 1 }">
+        +1
+      </button>
     </div>
 
     <div class="nav">
       <button class="secondary"
-        @touchstart="pressHaptic"
-        @click="prevDay">←</button>
+              @pointerdown="pressHaptic"
+              @click="prevDay">←</button>
 
       <div class="date-stack">
         <transition :name="dateAnim" mode="out-in">
           <div class="date-inner" :key="currentDate">
-
-            <div class="weekday" :style="{ opacity: isToday ? 1 : 0.4 }">
-              {{ weekday }}
-            </div>
-
-            <div class="date-sub" :style="{ opacity: isToday ? 0.7 : 0.3 }">
-              {{ dateLabel }}
-            </div>
-
+            <div class="weekday" :style="{ opacity: isToday ? 1 : 0.4 }">{{ weekday }}</div>
+            <div class="date-sub" :style="{ opacity: isToday ? 0.7 : 0.3 }">{{ dateLabel }}</div>
           </div>
         </transition>
       </div>
 
       <button class="secondary"
-        @touchstart="pressHaptic"
-        @click="nextDay">→</button>
+              @pointerdown="pressHaptic"
+              @click="nextDay">→</button>
     </div>
 
     <button class="secondary"
-      @touchstart="pressHaptic"
-      style="margin-top:10px"
-      @click="toggleRestDay"
-      :disabled="!canUseRestDay"
-      :style="{ opacity: canUseRestDay ? 1 : 0.4 }">
+            @pointerdown="pressHaptic"
+            @click="toggleRestDay"
+            :disabled="!canUseRestDay"
+            :style="{ opacity: canUseRestDay ? 1 : 0.4, marginTop:'10px' }">
       {{ dayData.restUsed ? 'Cancel Rest Day' : 'Use Rest Day' }}
     </button>
 
