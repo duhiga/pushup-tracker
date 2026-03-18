@@ -23,6 +23,13 @@
     .ring { position:relative; width:180px; height:180px; }
     svg { transform:rotate(-90deg); }
     .center-text { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:28px; }
+    .ring.goal-met { animation: goal-pop 800ms ease-out; }
+    @keyframes goal-pop {
+      0% { transform: translateZ(0) scale(1) rotate(0deg); }
+      35% { transform: translateZ(0) scale(1.08) rotate(8deg); }
+      65% { transform: translateZ(0) scale(0.98) rotate(-4deg); }
+      100% { transform: translateZ(0) scale(1) rotate(0deg); }
+    }
 
     .count { font-size:64px; font-weight:bold; margin-top:10px; }
     .goal { opacity:0.7; }
@@ -43,7 +50,10 @@
     .danger { background:#ef4444; }
     .secondary { background:#334155; color:white; }
 
-    .nav { margin-top:16px; display:flex; gap:12px; align-items:center; }
+    .nav { margin-top:16px; display:grid; grid-template-columns:56px 1fr 56px; align-items:center; width:100%; max-width:320px; }
+    .nav button { width:56px; }
+    .nav-left { justify-self:start; }
+    .nav-right { justify-self:end; }
     .topbar { position:absolute; top:12px; right:12px; }
 
     .settings { position:fixed; inset:0; background:#000000dd; display:flex; align-items:center; justify-content:center; padding:16px; }
@@ -57,216 +67,44 @@
       overflow-y:auto;
     }
 
+    .settings-actions { position: sticky; bottom: -20px; display:flex; justify-content:flex-end; padding-top:12px; margin-top:8px; background: linear-gradient(180deg, rgba(30,41,59,0) 0%, #1e293b 40%); }
+
     input { width:100%; max-width:100%; box-sizing:border-box; padding:10px; margin-bottom:12px; font-size:16px; border-radius:8px; border:none; }
     label { font-size:14px; opacity:0.8; }
 
     .hint { font-size:12px; opacity:0.6; margin-bottom:10px; }
+
+    /* No generic animations */
+
+    /* Spin-and-morph center text */
+    .center-text .pct, .center-text .rest { position:absolute; }
+    .center-text.to-rest { animation: spinBack 600ms ease-in-out; }
+    .center-text.to-rest .pct { animation: pctOut 600ms linear forwards; }
+    .center-text.to-rest .rest { animation: restIn 600ms linear forwards; }
+    .center-text.from-rest { animation: spinFwd 600ms ease-in-out; }
+    .center-text.from-rest .rest { animation: restOut 600ms linear forwards; }
+    .center-text.from-rest .pct { animation: pctIn 600ms linear forwards; }
+    @keyframes spinBack { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+    @keyframes spinFwd { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes pctOut { 0%,49% { opacity:1; } 50%,100% { opacity:0; } }
+    @keyframes restIn { 0%,50% { opacity:0; } 51%,100% { opacity:1; } }
+    @keyframes restOut { 0%,49% { opacity:1; } 50%,100% { opacity:0; } }
+    @keyframes pctIn { 0%,50% { opacity:0; } 51%,100% { opacity:1; } }
+
+    /* Date stack styles */
+    .date-stack { display:flex; flex-direction:column; align-items:center; line-height:1.1; }
+    .weekday { font-size:22px; font-weight:700; }
+    .date-sub { font-size:12px; opacity:0.7; margin-top:2px; }
+
+    /* IO row */
+    .io-row { display:flex; gap:8px; flex-wrap:wrap; }
+    .hidden-file { display:none; }
   </style>
 </head>
 <body>
 <div id="app"></div>
 
-<script>
-const { createApp, ref, computed } = Vue;
-
-createApp({
-  setup() {
-    const todayKey = () => new Date().toISOString().slice(0,10);
-    const state = ref(loadState());
-    const currentDate = ref(todayKey());
-    const showSettings = ref(false);
-
-    function loadState() {
-      const raw = document.cookie.split('; ').find(r => r.startsWith('pushups='));
-      return raw ? JSON.parse(decodeURIComponent(raw.split('=')[1])) : {
-        days:{},
-        settings:{ goal:50, step:5, restTarget:4 },
-        restCredits:0,
-        progressToRest:0
-      };
-    }
-
-    function saveState() {
-      document.cookie = 'pushups=' + encodeURIComponent(JSON.stringify(state.value)) + '; path=/; max-age=31536000';
-    }
-
-    const dayData = computed(() => {
-      if (!state.value.days[currentDate.value]) {
-        state.value.days[currentDate.value] = {
-          count:0,
-          restUsed:false,
-          goalSnapshot: state.value.settings.goal,
-          contributed:false
-        };
-      }
-      return state.value.days[currentDate.value];
-    });
-
-    function vibrate() { if (navigator.vibrate) navigator.vibrate(10); }
-
-    function add(n) { vibrate(); dayData.value.count += n; checkGoalContribution(); saveState(); }
-    function sub(n) { vibrate(); dayData.value.count = Math.max(0, dayData.value.count - n); saveState(); }
-
-    function checkGoalContribution() {
-      if (!dayData.value.contributed && dayData.value.count >= dayData.value.goalSnapshot) {
-        dayData.value.contributed = true;
-        state.value.progressToRest++;
-        if (state.value.progressToRest >= state.value.settings.restTarget) {
-          state.value.restCredits++;
-          state.value.progressToRest = 0;
-        }
-      }
-    }
-
-    function prevDay() { const d = new Date(currentDate.value); d.setDate(d.getDate() - 1); currentDate.value = d.toISOString().slice(0,10); }
-    function nextDay() { const d = new Date(currentDate.value); d.setDate(d.getDate() + 1); currentDate.value = d.toISOString().slice(0,10); }
-
-    function toggleRestDay() {
-      if (!dayData.value.restUsed && state.value.restCredits > 0) { dayData.value.restUsed = true; state.value.restCredits--; }
-      else if (dayData.value.restUsed) { dayData.value.restUsed = false; state.value.restCredits++; }
-      saveState();
-    }
-
-    const progress = computed(() => {
-      if (dayData.value.restUsed) return 0;
-      const goal = dayData.value.goalSnapshot;
-      return goal ? Math.min(1, dayData.value.count / goal) : 0;
-    });
-
-    function saveSettings() {
-      state.value.settings.goal = Number(state.value.settings.goal);
-      state.value.settings.step = Number(state.value.settings.step);
-      state.value.settings.restTarget = Number(state.value.settings.restTarget);
-      dayData.value.goalSnapshot = state.value.settings.goal;
-      saveState();
-      // keep modal open
-    }
-
-    function adjustRestCredits(n) {
-      state.value.restCredits = Math.max(0, state.value.restCredits + n);
-      saveState();
-    }
-
-    function downloadData() {
-      const blob = new Blob([JSON.stringify(state.value)], {type: 'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'pushups_backup.json';
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    function uploadData(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = e => {
-        try {
-          state.value = JSON.parse(e.target.result);
-          saveState();
-        } catch(err) {
-          alert('Invalid file');
-        }
-      };
-      reader.readAsText(file);
-    }
-
-    return {
-      state, currentDate, dayData, showSettings,
-      add, sub, prevDay, nextDay, toggleRestDay,
-      saveSettings, progress, adjustRestCredits,
-      downloadData, uploadData
-    };
-  },
-
-  template: `
-  <div class="container">
-    <div class="topbar">
-      <button class="secondary" @click="showSettings=true">⚙️</button>
-    </div>
-
-    <div class="goal">Goal: {{ dayData.goalSnapshot }}</div>
-
-    <div class="ring">
-      <svg width="180" height="180">
-        <circle cx="90" cy="90" r="80" stroke="#334155" stroke-width="12" fill="none" />
-        <circle cx="90" cy="90" r="80"
-          :stroke="dayData.restUsed ? '#3b82f6' : '#22c55e'"
-          stroke-width="12" fill="none"
-          :stroke-dasharray="2 * Math.PI * 80"
-          :stroke-dashoffset="2 * Math.PI * 80 * (1 - progress)" />
-      </svg>
-      <div class="center-text">
-        <span v-if="!dayData.restUsed">{{ Math.round(progress*100) }}%</span>
-        <span v-else>REST</span>
-      </div>
-    </div>
-
-    <div class="count" :style="{ visibility: dayData.restUsed ? 'hidden' : 'visible' }">{{ dayData.count }}</div>
-
-    <div class="rest-box">
-      💤 {{ state.restCredits }} rest days
-    </div>
-
-    <div class="buttons">
-      <!-- Switch - buttons to left, + buttons to right -->
-      <button class="danger" @click="sub(state.settings.step)" :disabled="dayData.restUsed" :style="{ opacity: dayData.restUsed ? 0.4 : 1 }">-{{ state.settings.step }}</button>
-      <button class="primary" @click="add(state.settings.step)" :disabled="dayData.restUsed" :style="{ opacity: dayData.restUsed ? 0.4 : 1 }">+{{ state.settings.step }}</button>
-      <button class="danger" @click="sub(1)" :disabled="dayData.restUsed" :style="{ opacity: dayData.restUsed ? 0.4 : 1 }">-1</button>
-      <button class="primary" @click="add(1)" :disabled="dayData.restUsed" :style="{ opacity: dayData.restUsed ? 0.4 : 1 }">+1</button>
-    </div>
-
-    <div class="nav">
-      <button class="secondary" @click="prevDay">⬅</button>
-      <div>{{ currentDate }}</div>
-      <button class="secondary" @click="nextDay">➡</button>
-    </div>
-
-    <button class="secondary" style="margin-top:10px" @click="toggleRestDay">
-      {{ dayData.restUsed ? 'Cancel Rest Day' : 'Use Rest Day' }}
-    </button>
-
-    <div v-if="showSettings" class="settings">
-      <div class="settings-panel">
-        <h3>Settings</h3>
-
-        <label>Daily Goal</label>
-        <div class="hint">Applies to current + future days</div>
-        <input type="number" v-model.number="state.settings.goal" />
-
-        <label>Step (X)</label>
-        <input type="number" v-model.number="state.settings.step" />
-
-        <label>Days per rest reward</label>
-        <input type="number" v-model.number="state.settings.restTarget" />
-
-        <label>Rest Credits: {{ state.restCredits }}</label>
-        <div style="display:flex; gap:10px; margin-bottom:12px;">
-          <button class="secondary" @click="adjustRestCredits(1)">+1</button>
-          <button class="secondary" @click="adjustRestCredits(-1)">-1</button>
-        </div>
-
-        <button class="primary" @click="saveSettings">Save</button>
-        <button class="secondary" @click="showSettings=false">Cancel</button>
-
-        <hr style="border-color:#334155; margin:12px 0;">
-
-        <button class="secondary" @click="downloadData">Download Data</button>
-        <input type="file" @change="uploadData" style="margin-top:8px; color:black;" />
-      </div>
-    </div>
-
-  </div>
-  `
-}).mount('#app');
-</script>
-
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
-}
-</script>
+<script src="app.js"></script>
 
 </body>
 </html>
