@@ -44,11 +44,11 @@ createApp({
     });
 
     function pressHaptic() {
-      if (navigator.vibrate) navigator.vibrate(10);
+      navigator.vibrate(10);
     }
 
     function successHaptic() {
-      if (navigator.vibrate) navigator.vibrate(30); // stronger + longer
+      navigator.vibrate(30); // stronger + longer
     }
 
     function add(n) { dayData.value.count += n; checkGoalContribution(); saveState(); }
