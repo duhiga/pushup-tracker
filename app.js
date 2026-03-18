@@ -43,7 +43,6 @@ createApp({
       return state.value.days[currentDate.value];
     });
 
-    // ✅ NEW: haptic on press
     function pressHaptic() {
       if (navigator.vibrate) navigator.vibrate(10);
     }
@@ -52,7 +51,6 @@ createApp({
       if (navigator.vibrate) navigator.vibrate(30); // stronger + longer
     }
 
-    // ❌ removed vibrate() from here
     function add(n) { dayData.value.count += n; checkGoalContribution(); saveState(); }
     function sub(n) { dayData.value.count = Math.max(0, dayData.value.count - n); saveState(); }
 
@@ -216,7 +214,6 @@ createApp({
 
     <div class="topbar">
       <button class="secondary"
-        @mousedown="pressHaptic" @touchstart="pressHaptic"
         @click="showSettings=true">⚙️</button>
     </div>
 
@@ -260,25 +257,25 @@ createApp({
 
     <div class="buttons">
       <button class="danger"
-        @mousedown="pressHaptic" @touchstart="pressHaptic"
+        @touchstart="pressHaptic"
         @click="sub(state.settings.step)"
         :disabled="dayData.restUsed"
         :style="{ opacity: dayData.restUsed ? 0.4 : 1 }">-{{ state.settings.step }}</button>
 
       <button class="primary"
-        @mousedown="pressHaptic" @touchstart="pressHaptic"
+        @touchstart="pressHaptic"
         @click="add(state.settings.step)"
         :disabled="dayData.restUsed"
         :style="{ opacity: dayData.restUsed ? 0.4 : 1 }">+{{ state.settings.step }}</button>
 
       <button class="danger"
-        @mousedown="pressHaptic" @touchstart="pressHaptic"
+        @touchstart="pressHaptic"
         @click="sub(1)"
         :disabled="dayData.restUsed"
         :style="{ opacity: dayData.restUsed ? 0.4 : 1 }">-1</button>
 
       <button class="primary"
-        @mousedown="pressHaptic" @touchstart="pressHaptic"
+        @touchstart="pressHaptic"
         @click="add(1)"
         :disabled="dayData.restUsed"
         :style="{ opacity: dayData.restUsed ? 0.4 : 1 }">+1</button>
@@ -286,7 +283,7 @@ createApp({
 
     <div class="nav">
       <button class="secondary"
-        @mousedown="pressHaptic" @touchstart="pressHaptic"
+        @touchstart="pressHaptic"
         @click="prevDay">←</button>
 
       <div class="date-stack">
@@ -306,12 +303,12 @@ createApp({
       </div>
 
       <button class="secondary"
-        @mousedown="pressHaptic" @touchstart="pressHaptic"
+        @touchstart="pressHaptic"
         @click="nextDay">→</button>
     </div>
 
     <button class="secondary"
-      @mousedown="pressHaptic" @touchstart="pressHaptic"
+      @touchstart="pressHaptic"
       style="margin-top:10px"
       @click="toggleRestDay"
       :disabled="!canUseRestDay"
