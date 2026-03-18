@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Pushup Tracker</title>
 
   <!-- PWA / Fullscreen meta tags -->
@@ -17,8 +17,9 @@
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
   <style>
-    body { margin:0; font-family: system-ui; background:#0f172a; color:white; }
-    .container { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; padding:16px; }
+    html, body { height:100%; }
+    body { margin:0; font-family: system-ui; background:#0f172a; color:white; overflow:hidden; overscroll-behavior-y:none; }
+    .container { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; height:100dvh; padding:16px; }
 
     .ring { position:relative; width:180px; height:180px; }
     svg { transform:rotate(-90deg); }
