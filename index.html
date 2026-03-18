@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Pushup Tracker</title>
 
-  <!-- PWA / Fullscreen meta tags -->
+  <!-- PWA -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0f172a">
   <meta name="mobile-web-app-capable" content="yes">
@@ -18,18 +18,44 @@
 
   <style>
     html, body { height:100%; }
-    body { margin:0; font-family: system-ui; background:#0f172a; color:white; overflow:hidden; overscroll-behavior-y:none; }
-    .container { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; height:100dvh; padding:16px; }
+    body {
+      margin:0;
+      font-family: system-ui;
+      background:#0f172a;
+      color:white;
+      overflow:hidden;
+      overscroll-behavior-y:none;
+    }
+
+    .container {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      height:100vh;
+      height:100dvh;
+      padding:16px;
+    }
 
     .ring { position:relative; width:180px; height:180px; }
     svg { transform:rotate(-90deg); }
-    .center-text { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:28px; }
+
+    .center-text {
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:28px;
+    }
+
     .ring.goal-met { animation: goal-pop 800ms ease-out; }
+
     @keyframes goal-pop {
-      0% { transform: translateZ(0) scale(1) rotate(0deg); }
-      35% { transform: translateZ(0) scale(1.08) rotate(8deg); }
-      65% { transform: translateZ(0) scale(0.98) rotate(-4deg); }
-      100% { transform: translateZ(0) scale(1) rotate(0deg); }
+      0% { transform: scale(1) rotate(0deg); }
+      35% { transform: scale(1.08) rotate(8deg); }
+      65% { transform: scale(0.98) rotate(-4deg); }
+      100% { transform: scale(1) rotate(0deg); }
     }
 
     .count { font-size:64px; font-weight:bold; margin-top:10px; }
@@ -44,20 +70,58 @@
       font-weight:bold;
     }
 
-    .buttons { display:grid; grid-template-columns:1fr 1fr; gap:12px; width:100%; max-width:320px; margin-top:10px; }
-    button { padding:18px; font-size:18px; border:none; border-radius:14px; }
+    .buttons {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      width:100%;
+      max-width:320px;
+      margin-top:10px;
+    }
+
+    button {
+      padding:18px;
+      font-size:18px;
+      border:none;
+      border-radius:14px;
+    }
 
     .primary { background:#22c55e; color:black; }
     .danger { background:#ef4444; }
     .secondary { background:#334155; color:white; }
 
-    .nav { margin-top:16px; display:grid; grid-template-columns:56px 1fr 56px; align-items:center; width:100%; max-width:320px; }
-    .nav button { width:56px; }
+    .nav {
+      margin-top:16px;
+      display:grid;
+      grid-template-columns:56px 1fr 56px;
+      align-items:center;
+      width:100%;
+      max-width:320px;
+    }
+
+    .nav button {
+      width:56px;
+      font-size:22px; /* ✅ fixed arrow size */
+      line-height:1;
+    }
+
     .nav-left { justify-self:start; }
     .nav-right { justify-self:end; }
+
     .topbar { position:absolute; top:12px; right:12px; }
 
-    .settings { position:fixed; inset:0; background:#000000dd; display:flex; align-items:center; justify-content:center; padding:16px; }
+    /* SETTINGS MODAL */
+    .settings {
+      position:fixed;
+      inset:0;
+      background:#000000dd;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      animation: fadeIn 180ms ease-out;
+    }
+
     .settings-panel {
       background:#1e293b;
       padding:20px;
@@ -66,46 +130,131 @@
       max-width:360px;
       max-height:90vh;
       overflow-y:auto;
+      animation: liftIn 220ms ease-out;
     }
 
-    .settings-actions { position: sticky; bottom: -20px; display:flex; justify-content:flex-end; padding-top:12px; margin-top:8px; background: linear-gradient(180deg, rgba(30,41,59,0) 0%, #1e293b 40%); }
+    .settings.closing {
+      animation: fadeOut 150ms ease-in forwards;
+    }
 
-    input { width:100%; max-width:100%; box-sizing:border-box; padding:10px; margin-bottom:12px; font-size:16px; border-radius:8px; border:none; }
-    label { font-size:14px; opacity:0.8; }
+    .settings-panel.closing {
+      animation: liftOut 150ms ease-in forwards;
+    }
 
-    .hint { font-size:12px; opacity:0.6; margin-bottom:10px; }
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+    @keyframes liftIn {
+      from { opacity:0; transform: translateY(12px) scale(0.98); }
+      to { opacity:1; transform: translateY(0) scale(1); }
+    }
 
-    /* No generic animations */
+    @keyframes fadeOut { to { opacity:0; } }
+    @keyframes liftOut {
+      to { opacity:0; transform: translateY(10px) scale(0.98); }
+    }
 
-    /* Spin-and-morph center text */
-    .center-text .pct, .center-text .rest { position:absolute; }
-    .center-text.to-rest { animation: spinBack 600ms ease-in-out; }
-    .center-text.to-rest .pct { animation: pctOut 600ms linear forwards; }
-    .center-text.to-rest .rest { animation: restIn 600ms linear forwards; }
-    .center-text.from-rest { animation: spinFwd 600ms ease-in-out; }
-    .center-text.from-rest .rest { animation: restOut 600ms linear forwards; }
-    .center-text.from-rest .pct { animation: pctIn 600ms linear forwards; }
-    @keyframes spinBack { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
-    @keyframes spinFwd { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    @keyframes pctOut { 0%,49% { opacity:1; } 50%,100% { opacity:0; } }
-    @keyframes restIn { 0%,50% { opacity:0; } 51%,100% { opacity:1; } }
-    @keyframes restOut { 0%,49% { opacity:1; } 50%,100% { opacity:0; } }
-    @keyframes pctIn { 0%,50% { opacity:0; } 51%,100% { opacity:1; } }
+    .progress-ring {
+      transition: stroke-dashoffset 260ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
 
-    /* Date stack styles */
-    .date-stack { display:flex; flex-direction:column; align-items:center; line-height:1.1; }
+    .date-stack {
+      position: relative;           /* ✅ important */
+      height: 52px;                 /* lock height so layout doesn't jump */
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow: hidden;             /* hides sliding elements */
+    }
+
+    .date-stack > .date-inner {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+    }
+    /* ------------------ DATE TRANSITIONS ------------------ */
+
+    /* NEXT (forward)
+      Old date → moves RIGHT and fades out
+      New date → comes FROM LEFT and fades in */
+    .slide-left-enter-from { transform: translateX(-20px); opacity:0; }
+    .slide-left-leave-to   { transform: translateX(20px); opacity:0; }
+
+    .slide-right-enter-from { transform: translateX(20px); opacity:0; }
+    .slide-right-leave-to   { transform: translateX(-20px); opacity:0; }
+
+
+    /* PREVIOUS (back)
+      Old date → moves LEFT and fades out
+      New date → comes FROM RIGHT and fades in */
+    .slide-right-enter-from {
+      transform: translateX(16px);
+      opacity: 0;
+    }
+    .slide-right-enter-to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    .slide-right-leave-from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    .slide-right-leave-to {
+      transform: translateX(-16px);
+      opacity: 0;
+    }
+
+
+    /* Shared animation timing */
+    .slide-left-enter-active,
+    .slide-left-leave-active,
+    .slide-right-enter-active,
+    .slide-right-leave-active {
+      transition: all 220ms ease;
+    }
+
     .weekday { font-size:22px; font-weight:700; }
     .date-sub { font-size:12px; opacity:0.7; margin-top:2px; }
 
-    /* IO row */
-    .io-row { display:flex; gap:8px; flex-wrap:wrap; }
-    .hidden-file { display:none; }
+    /* EXISTING center spin animations (unchanged) */
+    .center-text .pct, .center-text .rest { position:absolute; }
+
+    .center-text.to-rest { animation: spinBack 600ms ease-in-out; }
+    .center-text.to-rest .pct { animation: pctOut 600ms linear forwards; }
+    .center-text.to-rest .rest { animation: restIn 600ms linear forwards; }
+
+    .center-text.from-rest { animation: spinFwd 600ms ease-in-out; }
+    .center-text.from-rest .rest { animation: restOut 600ms linear forwards; }
+    .center-text.from-rest .pct { animation: pctIn 600ms linear forwards; }
+
+    .center-text span {
+      transition: opacity 120ms linear;
+    }
+
+    @keyframes spinBack { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+    @keyframes spinFwd { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    @keyframes pctOut { 0%,49% { opacity:1; } 50%,100% { opacity:0; } }
+    @keyframes restIn { 0%,50% { opacity:0; } 51%,100% { opacity:1; } }
+
+    @keyframes restOut { 0%,49% { opacity:1; } 50%,100% { opacity:0; } }
+    @keyframes pctIn { 0%,50% { opacity:0; } 51%,100% { opacity:1; } }
+
+    input {
+      width:100%;
+      max-width:100%;
+      box-sizing:border-box;
+      padding:10px;
+      margin-bottom:12px;
+      font-size:16px;
+      border-radius:8px;
+      border:none;
+    }
+
+    label { font-size:14px; opacity:0.8; }
   </style>
 </head>
+
 <body>
-<div id="app"></div>
-
-<script src="app.js"></script>
-
+  <div id="app"></div>
+  <script src="app.js"></script>
 </body>
 </html>
