@@ -102,14 +102,14 @@ createApp({
     }
 
     function prevDay() {
-      dateAnim.value = 'slide-left';
+      dateAnim.value = 'slide-right';
       const d = new Date(currentDate.value);
       d.setDate(d.getDate() - 1);
       currentDate.value = d.toISOString().slice(0,10);
     }
 
     function nextDay() {
-      dateAnim.value = 'slide-right';
+      dateAnim.value = 'slide-left';
       const d = new Date(currentDate.value);
       d.setDate(d.getDate() + 1);
       currentDate.value = d.toISOString().slice(0,10);
