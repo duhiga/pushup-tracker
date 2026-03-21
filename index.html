@@ -101,7 +101,7 @@
 
     .nav button {
       width:56px;
-      font-size:22px; /* ✅ fixed arrow size */
+      font-size:22px;
       line-height:1;
     }
 
@@ -157,12 +157,12 @@
     }
 
     .date-stack {
-      position: relative;           /* ✅ important */
-      height: 52px;                 /* lock height so layout doesn't jump */
+      position: relative;
+      height: 52px;
       display:flex;
       align-items:center;
       justify-content:center;
-      overflow: hidden;             /* hides sliding elements */
+      overflow: hidden;
     }
 
     .date-stack > .date-inner {
@@ -170,51 +170,37 @@
       width: 100%;
       text-align: center;
     }
-    /* ------------------ DATE TRANSITIONS ------------------ */
 
-    /* NEXT (forward)
-      Old date → moves RIGHT and fades out
-      New date → comes FROM LEFT and fades in */
-    .slide-left-enter-from { transform: translateX(-20px); opacity:0; }
-    .slide-left-leave-to   { transform: translateX(20px); opacity:0; }
-
-    .slide-right-enter-from { transform: translateX(20px); opacity:0; }
-    .slide-right-leave-to   { transform: translateX(-20px); opacity:0; }
-
-
-    /* PREVIOUS (back)
-      Old date → moves LEFT and fades out
-      New date → comes FROM RIGHT and fades in */
-    .slide-right-enter-from {
-      transform: translateX(16px);
-      opacity: 0;
-    }
-    .slide-right-enter-to {
-      transform: translateX(0);
-      opacity: 1;
-    }
-    .slide-right-leave-from {
-      transform: translateX(0);
-      opacity: 1;
-    }
-    .slide-right-leave-to {
-      transform: translateX(-16px);
-      opacity: 0;
-    }
-
-
-    /* Shared animation timing */
+    /* ✅ UPDATED DATE TRANSITIONS (more distance + longer) */
     .slide-left-enter-active,
     .slide-left-leave-active,
     .slide-right-enter-active,
     .slide-right-leave-active {
-      transition: all 220ms ease;
+      transition: all 0.28s ease;
+    }
+
+    .slide-left-enter-from {
+      transform: translateX(60px);
+      opacity: 0;
+    }
+    .slide-left-leave-to {
+      transform: translateX(-60px);
+      opacity: 0;
+    }
+
+    .slide-right-enter-from {
+      transform: translateX(-60px);
+      opacity: 0;
+    }
+    .slide-right-leave-to {
+      transform: translateX(60px);
+      opacity: 0;
     }
 
     .weekday { font-size:22px; font-weight:700; }
     .date-sub { font-size:12px; opacity:0.7; margin-top:2px; }
 
-    /* EXISTING center spin animations (unchanged) */
+    /* EXISTING center spin animations */
     .center-text .pct, .center-text .rest { position:absolute; }
 
     .center-text.to-rest { animation: spinBack 600ms ease-in-out; }
@@ -237,6 +223,16 @@
 
     @keyframes restOut { 0%,49% { opacity:1; } 50%,100% { opacity:0; } }
     @keyframes pctIn { 0%,50% { opacity:0; } 51%,100% { opacity:1; } }
+
+    /* ✅ NEW: 100% spin */
+    .pct.spin-100 {
+      animation: spin100 0.9s ease-out;
+    }
+
+    @keyframes spin100 {
+      0%   { transform: rotate(0deg); }
+      100% { transform: rotate(720deg); }
+    }
 
     input {
       width:100%;

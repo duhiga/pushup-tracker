@@ -19,17 +19,48 @@ createApp({
 
     function loadState() {
       const raw = document.cookie.split('; ').find(r => r.startsWith('pushups='));
-      return raw ? JSON.parse(decodeURIComponent(raw.split('=')[1])) : {
+      const base = raw ? JSON.parse(decodeURIComponent(raw.split('=')[1])) : {
         days:{},
         settings:{ goal:50, step:5, restTarget:4 },
         restCredits:0,
         progressToRest:0
       };
+
+      if (!base.lastSeenDate) base.lastSeenDate = null;
+
+      return base;
     }
 
     function saveState() {
       document.cookie = 'pushups=' + encodeURIComponent(JSON.stringify(state.value)) + '; path=/; max-age=31536000';
     }
+
+    function syncToToday() {
+      const today = todayKey();
+
+      const isViewingToday = currentDate.value === today;
+      const lastSeen = state.value.lastSeenDate;
+
+      if (lastSeen !== today && !isViewingToday) {
+        currentDate.value = today;
+      }
+
+      state.value.lastSeenDate = today;
+      saveState();
+    }
+
+    // 🔑 Run once on startup
+    syncToToday();
+
+    // 🔑 Handle app returning to foreground
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        syncToToday();
+      }
+    });
+
+    // 🔑 Fallback for some mobile browsers
+    window.addEventListener('focus', syncToToday);
 
     const dayData = computed(() => {
       if (!state.value.days[currentDate.value]) {
@@ -47,7 +78,7 @@ createApp({
       if (navigator.vibrate) navigator.vibrate(10);
     }
     function successHaptic() {
-      if (navigator.vibrate) navigator.vibrate(30); // stronger + longer
+      if (navigator.vibrate) navigator.vibrate(30);
     }
 
     function add(n) { dayData.value.count += n; checkGoalContribution(); saveState(); }
@@ -63,7 +94,6 @@ createApp({
           state.value.progressToRest = 0;
         }
 
-        // ✅ NEW: success haptic
         successHaptic();
 
         celebrate.value = true;
@@ -72,24 +102,16 @@ createApp({
     }
 
     function prevDay() {
-      // going backwards → new comes from right
       dateAnim.value = 'slide-left';
-
       const d = new Date(currentDate.value);
       d.setDate(d.getDate() - 1);
-
-      // IMPORTANT: update immediately (no timeout)
       currentDate.value = d.toISOString().slice(0,10);
     }
 
     function nextDay() {
-      // going forward → new comes from left
       dateAnim.value = 'slide-right';
-
       const d = new Date(currentDate.value);
       d.setDate(d.getDate() + 1);
-
-      // IMPORTANT: update immediately
       currentDate.value = d.toISOString().slice(0,10);
     }
 
@@ -111,12 +133,10 @@ createApp({
       saveState();
     }
 
-    // ✅ disable logic
     const canUseRestDay = computed(() =>
       dayData.value.restUsed || state.value.restCredits > 0
     );
 
-    // ✅ today styling
     const isToday = computed(() => currentDate.value === todayKey());
 
     const progress = computed(() => {
@@ -234,6 +254,7 @@ createApp({
         <div class="center-text" :class="{ 'to-rest': toRestAnim, 'from-rest': fromRestAnim }">
           <span
             class="pct"
+            :class="{ 'spin-100': celebrate && Math.round(progress*100) === 100 }"
             :style="{ opacity: dayData.restUsed && !fromRestAnim ? 0 : 1 }"
           >
             {{ Math.round(progress*100) }}%
